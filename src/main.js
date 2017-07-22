@@ -1,10 +1,12 @@
-import Vue from 'vue'
-import App from './App.vue'
-import Vuetify from 'vuetify'
+import Vue from 'vue';
+import App from './App.vue';
+import Vuetify from 'vuetify';
 
-Vue.use(Vuetify)
+Vue.use(Vuetify);
 
-new Vue({
+var vue = new Vue({
   el: '#app',
   render: h => h(App)
-})
+});
+
+// window.vue = vue;

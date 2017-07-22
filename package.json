@@ -1,6 +1,6 @@
 {
   "name": "amplify-viz",
-  "description": "A Vue.js project",
+  "description": "A performance data visualization tool for Amplify",
   "version": "1.0.0",
   "author": "Joey Ezechiëls <joey.ezechiels@gmail.com>",
   "private": true,
@@ -9,6 +9,11 @@
     "build": "cross-env NODE_ENV=production webpack --progress --hide-modules"
   },
   "dependencies": {
+    "jquery": "~3.2.0",
+    "lodash": "~4.17.0",
+    "moment": "~2.18.0",
+    "mongoose": "~4.11.0",
+    "q": "~1.5.0",
     "vue": "^2.3.4",
     "vuetify": "^0.13.0"
   },
@@ -19,6 +24,7 @@
     "cross-env": "^3.0.0",
     "css-loader": "^0.25.0",
     "file-loader": "^0.9.0",
+    "style-loader": "^0.18.2",
     "stylus": "^0.54.5",
     "stylus-loader": "^3.0.1",
     "vue-loader": "^11.1.4",

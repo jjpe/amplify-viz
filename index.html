@@ -9,7 +9,27 @@
     <link rel="icon" type="image/png" href="public/favicon-32x32.png" sizes="32x32">
   </head>
   <body>
-    <div id="app"></div>
-    <script src="/dist/build.js"></script>
+      <div id="app"></div>
+      <script src="/dist/build.js"></script>
+      <script type="text/javascript">
+       window.addEventListener('keydown', this.dispatchKeypress, false);
+
+       function dispatchKeypress(e) {
+           var code = e.keyCode;
+           switch (code) {
+               case 71: // 'G' key, opens the Graphs drawer
+                   window.VueData.leftDrawer = !window.VueData.leftDrawer;
+                   break;
+               case 76: // 'L' key, opens the Legend drawer
+                   window.VueData.rightDrawer = !window.VueData.rightDrawer;
+                   window.VueData.rightDrawerWidth =
+                       window.VueData.rightDrawerWidth === '0%'
+                       ? window.VueData.rightDrawerOpenWidth
+                       : '0%';
+                   break;
+                   // default: alert(code); // Useful to discover other key codes
+           }
+       }
+      </script>
   </body>
 </html>

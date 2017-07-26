@@ -9,7 +9,8 @@
         <v-list-tile v-for="(graph_item, i) in leftDrawerEntries"
                      :key="i"
                      value="true"
-                     @click.native="currentGraph = graph_item.graph; leftDrawer = !leftDrawer">
+                     @click.native="currentGraph = graph_item.graph;
+                                    leftDrawer = !leftDrawer">
           <v-list-tile-action>
             <v-icon light v-html="graph_item.icon"></v-icon>
           </v-list-tile-action>
@@ -26,8 +27,9 @@
       <v-toolbar-title class="grey--text" v-text="title"></v-toolbar-title>
       <v-spacer></v-spacer>
       <v-btn icon>
-        <!-- @ click.native.stop="fixed = !fixed" -->
-        <!-- TODO: clicking needs to actually sync data from MongoDB -->
+        <!-- TODO:
+             clicking needs to actually sync data from MongoDB,
+             or request it from an application server  -->
         <v-icon class="grey--text">sync</v-icon>
       </v-btn>
       <v-btn icon
@@ -40,65 +42,10 @@
       </v-btn>
     </v-toolbar>
     <main>
-
-      <!-- <\!-- "Single Revision" screen -\-> -->
-      <!-- <v-layout justify-center v-if="currentGraph === 'revision'"> -->
-      <!--   <v-flex xs11 sm11> -->
-      <!--     <\!-- TODO: remove the min-height once the graph is operational -\-> -->
-      <!--     <v-card style="margin-top: 15px; min-height: 30000px"> -->
-      <!--       <v-card-title primary-title> -->
-      <!--         <div> -->
-      <!--           <h3 class="headline mb-0 orange--text">Revision</h3> -->
-      <!--           <div class="grey--text">Actions in a revision</div> -->
-      <!--         </div> -->
-      <!--       </v-card-title> -->
-
-      <!--       <v-card-actions> -->
-      <!--         <v-btn class="orange--text">&lt;</v-btn> -->
-      <!--         <v-spacer></v-spacer> -->
-      <!--         <v-btn dark large fab disabled class="orange--text"> -->
-      <!--           {{ currentRevisionValidationRules.valid(currentRevision) }} -->
-      <!--         </v-btn> -->
-      <!--         <v-spacer></v-spacer> -->
-      <!--         <\!-- <v-spacer></v-spacer> -\-> -->
-      <!--         <\!-- <v-spacer></v-spacer> -\-> -->
-      <!--         <\!-- <v-spacer></v-spacer> -\-> -->
-      <!--         <\!-- <v-spacer></v-spacer> -\-> -->
-      <!--         <\!-- <v-spacer></v-spacer> -\-> -->
-      <!--         <\!-- <\\!-- <v-spacer></v-spacer> -\\-> -\-> -->
-      <!--         <\!-- <v-text-field name="input-3" -\-> -->
-      <!--         <\!--               label="Revision" -\-> -->
-      <!--         <\!--               v-model="currentRevisionRange" -\-> -->
-      <!--         <\!--               :rules="[currentRevisionRangeValidationRules.valid]" -\-> -->
-      <!--         <\!--               persistent-hint -\-> -->
-      <!--         <\!--               dark -\-> -->
-      <!--         <\!--               single-line -\-> -->
-      <!--         <\!--               ></v-text-field> -\-> -->
-      <!--         <\!-- <\\!-- <v-spacer></v-spacer> -\\-> -\-> -->
-      <!--         <\!-- <v-spacer></v-spacer> -\-> -->
-      <!--         <\!-- <v-spacer></v-spacer> -\-> -->
-      <!--         <\!-- <v-spacer></v-spacer> -\-> -->
-      <!--         <\!-- <v-spacer></v-spacer> -\-> -->
-      <!--         <\!-- <v-spacer></v-spacer> -\-> -->
-      <!--         <\!-- <v-spacer></v-spacer> -\-> -->
-      <!--         <v-btn class="orange--text">&gt;</v-btn> -->
-      <!--       </v-card-actions> -->
-
-      <!--       <v-layout align-center justify-center> -->
-      <!--         <v-flex xs12> -->
-      <!--           <\!-- <v-card-media src="/public/v.png" height="200px" contain></v-card-media> -\-> -->
-      <!--           <revision-graph></revision-graph> -->
-      <!--         </v-flex> -->
-      <!--       </v-layout> -->
-      <!--     </v-card> -->
-      <!--   </v-flex> -->
-      <!-- </v-layout> -->
-
-
       <!-- "Revision Overview" screen -->
       <v-layout justify-center v-if="currentGraph === 'revisions'">
         <v-flex xs11 sm11>
-          <v-card style="margin-top: 15px; min-height: 30000px">
+          <v-card style="margin-top: 15px; margin-bottom: 15px">
 
             <v-card-title primary-title>
               <div>
@@ -113,7 +60,9 @@
 
             <v-layout align-center justify-center>
               <v-flex xs12>
-                <revisions-graph></revisions-graph>
+                <revisions-graph id="revisions-svg"
+                                 :msgs="msgs"
+                                 :kinds="kinds"></revisions-graph>
               </v-flex>
             </v-layout>
 
@@ -139,7 +88,6 @@ import * as d3 from 'd3';
 import _ from 'lodash';
 import $ from 'jquery';
 import AvLegend from './AvLegend.vue';
-// import RevisionGraph from './RevisionGraph.vue'; // TODO: remove
 import RevisionsGraph from './RevisionsGraph.vue';
 export default {
     data() {
@@ -150,15 +98,19 @@ export default {
 
         return {
             title: 'Amplify Viz',
-            msgs: this.fetchMsgs(),
+            msgs: _.chain(window.AvApp.fetchMsgs())
+                .forEach(function(msg, idx) {
+                    // msg.color = window.AvApp.legendColorByIndex(idx);
+                    msg.color = window.AvApp.colorForKind(msg.kind);
+                })
+                .value(),
 
             // Options: 'none' and any `leftDrawerEntries.graph` value.
-            currentGraph: 'none',
+            currentGraph: 'revisions',
 
-            leftDrawer: true,
+            leftDrawer: false,
             leftDrawerEntries: [
                 // For more icons see https://material.io/icons/
-                // { icon: 'filter_1',    title: 'Revision',  graph: 'revision'  },
                 { icon: 'filter_none', title: 'Revisions', graph: 'revisions' }
             ],
 
@@ -183,13 +135,20 @@ export default {
         msgsByRevision: function() {
             return _.groupBy(this.msgs, (msg) => msg.revision)
         },
+        kinds: function() {
+            return _.chain(this.msgs)
+                .map((msg) => msg.kind)
+                .uniq()
+                .value()
+        },
     },
+
 
     methods: {
         fetchMsgs() { // TODO: unstub and implement
             return [
                 {
-                    color: 'blue',
+                    // color: 'blue',
                     process: 'spoofax server',
                     revision: 3,
                     kind: 'parse',
@@ -197,15 +156,15 @@ export default {
                     time_perc: 18,
                 },
                 {
-                    color: 'red',
+                    // color: 'red',
                     process: 'spoofax server',
                     revision: 3,
+                    kind: 'analyze',
                     time_ms: 2000000000,
                     time_perc: 60,
-                    kind: 'analyze',
                 },
                 {
-                    color: 'purple',
+                    // color: 'purple',
                     process: 'spoofax server',
                     revision: 3,
                     kind: 'syntax colors',
@@ -213,7 +172,15 @@ export default {
                     time_perc: 30,
                 },
                 {
-                    color: 'yellow',
+                    // color: 'purple',
+                    process: 'spoofax server',
+                    revision: 4,
+                    kind: 'syntax colors',
+                    time_ms: 670000000,
+                    time_perc: 25,
+                },
+                {
+                    // color: 'yellow',
                     process: 'emacs',
                     revision: 4,
                     kind: 'sent originating msg',
@@ -247,6 +214,11 @@ export default {
 
         legendColorByIndex:  d3.scaleOrdinal(d3.schemeCategory20),
 
+        colorForKind: function(kind) {
+            let index = _.indexOf(this.kinds, kind);
+            return this.legendColorByIndex(index);
+        },
+
         toggleRightDrawer() {
             app.rightDrawer = !app.rightDrawer;
             app.rightDrawerWidth =  app.rightDrawerWidth === '0%'
@@ -256,6 +228,7 @@ export default {
     },
 
     mounted() {
+        var toggleRightDrawer = this.toggleRightDrawer;
         let dispatchKeypress = function(e) {
             let app = window.AvApp;
             switch (e.keyCode) {
@@ -263,6 +236,7 @@ export default {
                 app.leftDrawer = !app.leftDrawer;
                 break;
             case 76: // 'L' key, toggles the Legend drawer
+                // toggleRightDrawer(); // TODO:
                 app.rightDrawer = !app.rightDrawer;
                 app.rightDrawerWidth =  app.rightDrawerWidth === '0%'
                     ? app.rightDrawerOpenWidth
@@ -277,11 +251,16 @@ export default {
 
     components: {
         AvLegend,
-        // RevisionGraph,
         RevisionsGraph,
     }
 }
 </script>
+
+<style>
+  body {
+      background: #303030;
+  }
+</style>
 
 <style lang="stylus">
   @import './stylus/main'

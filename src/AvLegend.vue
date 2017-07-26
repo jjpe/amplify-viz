@@ -1,12 +1,8 @@
 <template>
-  <!-- TODO: parameterize the ID attr:  av-legend-table   -->
-  <v-data-table :id="id"
-                class="elevation-0"
-                :headers="headers"
-                :items="msgs"
-                hide-actions >
-    <template slot="items" scope="props" class="blue">
-      <td class="text-xs-left" :class="props.item.color"></td>
+  <v-data-table :id="id" :headers="headers" :items="msgs" hide-actions>
+    <template slot="items" scope="props">
+      <!-- <td class="text-xs-left" :class="props.item.color"></td> -->
+      <td class="text-xs-left" :style="{background: props.item.color}"></td>
       <td class="text-xs-center">{{ props.item.process }}</td>
       <td class="text-xs-center">{{ props.item.revision }}</td>
       <td class="text-xs-center">{{ props.item.kind }}</td>
@@ -40,11 +36,9 @@ export default {
 
     methods: {
         fixHeaders: function() {
-            // A hack to color the legend table headers correctly.
-
             const COLOR = 'grey';
             d3.selectAll(`#${this.id} table thead tr th`)
-            // Fix the headers again after sorting a column:
+                // Fix the headers again after sorting a column:
                 .attr('onclick', 'window.AvLegend.fixHeaders()')
                 .classed(`${COLOR}--text`, true)
                 .classed('text--darken-1', true);

@@ -22,7 +22,7 @@ export default {
         let initStackedBarChart = {
             draw: function(config) {
                 let data = config.data;
-                let margin = {top: 20, right: 20, bottom: 40, left: 50};
+                let margin = {top: 50, right: 40, bottom: 40, left: 70};
                 let svgWidth = document
                     .getElementById('revisions-svg')
                     .getBoundingClientRect()
@@ -54,18 +54,11 @@ export default {
                 // data.sort(function(a, b) { return b.total - a.total; });
                 data.sort((a, b) => b.revision - a.revision);
 
-                // TODO: The x-scale must become scale Time/Date rather than Time/Date:
                 let lastLayer = layers[layers.length - 1];
-                xScale.domain([0, d3.max(lastLayer,    (d) => d[0])]).nice();
-                // TODO: The y-scale must become scale rev# rather than Time/Date:
+                let maxX = d3.max(lastLayer,  (d) => d[0]);
+                xScale.domain([0, maxX]).nice();
                 let parseDate = d3.timeParse("%m/%Y");
-                yScale.domain(data.map(function(d) {
-                    // console.log('le D: ', d);
-                    return d.revision;
-                    // console.log('le D: ', d);
-                    // console.log('parse date: ', parseDate(d.date));
-                    // return parseDate(d.date);
-                }));
+                yScale.domain(data.map((d) => d.revision));
 
                 let layer = svg.selectAll(".layer")
                     .data(layers)
@@ -89,15 +82,31 @@ export default {
                     .attr("class", "axis axis--x")
                     // .attr("transform", "translate(0," + (height+5) + ")")
                     .call(xAxis);
+                svg.select("#revisions-svg g")
+                    .append('text')
+                    .attr('text-anchor', 'middle')
+                    .attr('x', `${width/2}px`)
+                    .attr('y', '-30px')
+                    .attr('fill', 'grey')
+                    .attr('font-family', 'roboto')
+                    .attr('font-size', '20px')
+                    .text("Time (ns)");
 
                 svg.append("g")
                     .attr("class", "axis axis--y")
                     // .attr("transform", "translate(0,0)")
                     .call(yAxis);
-
-                // svg.selectAll(".axis--y path").attr("style", "stroke: grey");
-                // svg.selectAll(".axis--x path").attr("style", "stroke: grey");
-                // svg.selectAll(".tick line").attr("style", "stroke: grey");
+                svg.select("#revisions-svg g")
+                    .append('text')
+                    .attr('text-anchor', 'middle')
+                    // .attr('x', '-50%')
+                    .attr('x', `${-height/2}px`)
+                    .attr('y', '-40px')
+                    .attr('fill', 'grey')
+                    .attr('font-family', 'roboto')
+                    .attr('font-size', '20px')
+                    .attr('style', 'transform: rotate(-90deg)')
+                    .text("Revision");
 
                 // Fix the tick text color
                 d3.selectAll("g.tick text").attr('fill', 'lightgrey');

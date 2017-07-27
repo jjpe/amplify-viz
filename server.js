@@ -30,6 +30,7 @@ const DB_NAME = 'Collector';
 const COLLECTION_NAME = 'Msg';
 
 
+mongoose.Promise = global.Promise;
 var Msg = mongoose.model('Msg', {
     process: String,
     revision: Number, // request_number

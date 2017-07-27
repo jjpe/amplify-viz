@@ -9,7 +9,7 @@
         <v-list-tile v-for="(graph_item, i) in leftDrawerEntries"
                      :key="i"
                      value="true"
-                     @click.native="currentGraph = graph_item.graph;
+                     @click.native="currentGraph = graph_item.title;
                                     leftDrawer = !leftDrawer">
           <v-list-tile-action>
             <v-icon light v-html="graph_item.icon"></v-icon>
@@ -43,7 +43,7 @@
     </v-toolbar>
     <main>
       <!-- "Revision Overview" screen -->
-      <v-layout justify-center v-if="currentGraph === 'revisions'">
+      <v-layout justify-center v-if="currentGraph === 'Revisions'">
         <v-flex xs11 sm11>
           <v-card style="margin-top: 15px; margin-bottom: 15px;">
 
@@ -93,38 +93,22 @@ export default {
         // VaApp component.  This is used for e.g. creating key bindings for
         // the left and right side navs.
         window.AvApp = this;
-
         return {
             title: 'Amplify Viz',
-            msgs: _.chain(window.AvApp.fetchMsgs())
-                .forEach(function(msg, idx) {
-                    // msg.color = window.AvApp.legendColorByIndex(idx);
-                    msg.color = window.AvApp.colorForKind(msg.kind);
-                })
-                .value(),
+            msgs: [],
 
-            // Options: 'none' and any `leftDrawerEntries.graph` value.
-            currentGraph: 'revisions',
+            // Options: 'none' and any `leftDrawerEntries.title` value.
+            currentGraph: 'Revisions',
 
             leftDrawer: false,
             leftDrawerEntries: [
                 // For more icons see https://material.io/icons/
-                { icon: 'filter_none', title: 'Revisions', graph: 'revisions' }
+                { icon: 'filter_none', title: 'Revisions' }
             ],
 
             rightDrawer: false,
             rightDrawerWidth: '0%',
             rightDrawerOpenWidth: '700px',
-
-            // For the 'revision' graph:
-            currentRevision: '100',
-            currentRevisionValidationRules: {
-                valid:  function(value) {
-                    return /^(\s*)([0-9]+)(\s*)$/.test(value)
-                        ? value
-                        : 'Invalid revision';
-                },
-            },
 
         };
     },
@@ -141,110 +125,62 @@ export default {
         },
     },
 
-
     methods: {
-        fetchMsgs() { // TODO: unstub and implement
-            return [
-                {
-                    // color: 'blue',
-                    process: 'spoofax server',
-                    revision: 3,
-                    kind: 'parse',
-                    time_ms: 400000000,
-                    time_perc: 18,
-                },
-                {
-                    // color: 'red',
-                    process: 'spoofax server',
-                    revision: 3,
-                    kind: 'analyze',
-                    time_ms: 2000000000,
-                    time_perc: 60,
-                },
-                {
-                    // color: 'purple',
-                    process: 'spoofax server',
-                    revision: 3,
-                    kind: 'syntax colors',
-                    time_ms: 1000000000,
-                    time_perc: 30,
-                },
-                {
-                    // color: 'purple',
-                    process: 'spoofax server',
-                    revision: 4,
-                    kind: 'syntax colors',
-                    time_ms: 670000000,
-                    time_perc: 25,
-                },
-                {
-                    // color: 'yellow',
-                    process: 'emacs',
-                    revision: 4,
-                    kind: 'sent originating msg',
-                    time_ms: 40000,
-                    time_perc: 0,
-                },
-            ];
+        fetchMsgs() {
+            console.log('[fetchMsgs] method called');
+            d3.request("/msgs/")
+                .header("X-Requested-With", "XMLHttpRequest")
+                .header("Content-Type", "application/json")
+                .get(function(resp) {
+                    let msgs = JSON.parse(resp.responseText);
+                    let sortedMsgs = _.orderBy(
+                        msgs,
+                        ['revision', 'sent_at_ns'],
+                        ['asc', 'asc']
+                    );
+                    console.log('[fetchMsgs callback] msgs: ', msgs);
+                    console.log('[fetchMsgs callback] sorted msgs: ', sortedMsgs);
+                    window.AvApp.msgs = msgs;
+                    window.RevisionsGraph.redraw(
+                        window.AvApp.msgs,
+                        window.AvApp.kinds
+                    );
+                    window.AvLegend.msgs = msgs;
+                });
         },
 
-        // currentRevisionMsgs: function(currentRevision) {
-        //     // Get the msgs for the current revision
-        //     // let currentRevision = this.$data.currentRevision;
-        //     var msgs = _.chain(this.msgs)
-        //         .filter((msg) => msg.revision === currentRevision)
-        //         .value();
-        //     console.log(`msgs for revision ${currentRevision}:\n`, msgs);
-        //     return msgs;
-        // },
-
-        // currentRevisionActions: function(currentRevision) {
-        //     // Get the actions for the current revision
-        //     // let currentRevision = this.$data.currentRevision;
-        //     var kinds = _.chain(this.msgs)
-        //         .filter((msg) => msg.revision === currentRevision)
-        //         .map((msg) => msg.kind)
-        //         .uniq()
-        //         .value();
-        //     console.log(`actions for revision ${currentRevision}:\n`, kinds);
-        //     return kinds;
-        // },
-
-        legendColorByIndex:  d3.scaleOrdinal(d3.schemeCategory20),
-
-        colorForKind: function(kind) {
+        colorForKind(kind) {
             let index = _.indexOf(this.kinds, kind);
-            return this.legendColorByIndex(index);
+            let legendColorByIndex = d3.scaleOrdinal(d3.schemeCategory20);
+            return legendColorByIndex(index);
         },
 
         toggleRightDrawer() {
-            app.rightDrawer = !app.rightDrawer;
-            app.rightDrawerWidth =  app.rightDrawerWidth === '0%'
-                ? app.rightDrawerOpenWidth
+            this.rightDrawer = !this.rightDrawer;
+            this.rightDrawerWidth =  this.rightDrawerWidth === '0%'
+                ? this.rightDrawerOpenWidth
                 : '0%';
         },
+
+        dispatchKeypress(event) {
+            switch (event.keyCode) {
+            case 71: // 'G' key, toggles the Graphs drawer
+                this.leftDrawer = !this.leftDrawer;
+                break;
+            case 76: // 'L' key, toggles the Legend drawer
+                this.rightDrawer = !this.rightDrawer;
+                this.rightDrawerWidth =  this.rightDrawerWidth === '0%'
+                    ? this.rightDrawerOpenWidth
+                    : '0%';
+                break;
+                // default: alert(event.KeyCode); // Useful to discover other key codes
+            }
+        }
     },
 
     mounted() {
-        var toggleRightDrawer = this.toggleRightDrawer;
-        let dispatchKeypress = function(e) {
-            let app = window.AvApp;
-            switch (e.keyCode) {
-            case 71: // 'G' key, toggles the Graphs drawer
-                app.leftDrawer = !app.leftDrawer;
-                break;
-            case 76: // 'L' key, toggles the Legend drawer
-                // toggleRightDrawer(); // TODO:
-                app.rightDrawer = !app.rightDrawer;
-                app.rightDrawerWidth =  app.rightDrawerWidth === '0%'
-                    ? app.rightDrawerOpenWidth
-                    : '0%';
-                break;
-                // default: alert(e.KeyCode); // Useful to discover other key codes
-            }
-        };
-
-        window.addEventListener('keydown', dispatchKeypress, false);
+        window.addEventListener('keydown', this.dispatchKeypress, false);
+        window.AvApp.fetchMsgs();
     },
 
     components: {

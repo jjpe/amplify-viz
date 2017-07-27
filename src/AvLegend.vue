@@ -73,4 +73,7 @@ export default {
 .datatable__actions {
     color: grey;
 }
+table.table tbody tr:hover {
+  background: #312f2f !important;
+}
 </style>

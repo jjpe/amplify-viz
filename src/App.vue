@@ -33,13 +33,18 @@
         <v-icon class="grey--text">sync</v-icon>
       </v-btn>
       <v-btn icon
-             @click.native.stop="rightDrawer = !rightDrawer;
-                                 rightDrawerWidth === '0%'
-                                     ? rightDrawerWidth = rightDrawerOpenWidth
-                                     : rightDrawerWidth = '0%'"
+             @click.native.stop="toggleRightDrawer()"
              class="grey--text">
         <v-icon>view_module</v-icon>
       </v-btn>
+      <!-- <v-btn icon -->
+      <!--        @click.native.stop="rightDrawer = !rightDrawer; -->
+      <!--                            rightDrawerWidth === '0%' -->
+      <!--                                ? rightDrawerWidth = rightDrawerOpenWidth -->
+      <!--                                : rightDrawerWidth = '0%'" -->
+      <!--        class="grey--text"> -->
+      <!--   <v-icon>view_module</v-icon> -->
+      <!-- </v-btn> -->
     </v-toolbar>
     <main>
       <!-- "Revision Overview" screen -->
@@ -72,7 +77,9 @@
     <v-navigation-drawer id="right-drawer"
                          persistent clipped right
                          v-model="rightDrawer"
-                         :style="{ width: rightDrawerWidth }">
+                         style="width: 60%;"
+                         >
+      <!-- :style="{ width: rightDrawerWidth }" -->
       <v-toolbar class="grey--text indigo" dark>
         <v-toolbar-title>Legend</v-toolbar-title>
       </v-toolbar>
@@ -107,9 +114,11 @@ export default {
             ],
 
             rightDrawer: false,
-            rightDrawerWidth: '0%',
+            // rightDrawerWidth: '0%',
+            rightDrawerWidth: '700px',
             rightDrawerOpenWidth: '700px',
 
+            colorScale: d3.scaleOrdinal(d3.schemeCategory20),
         };
     },
 
@@ -122,6 +131,13 @@ export default {
                 .map((msg) => msg.kind)
                 .uniq()
                 .value()
+        },
+        coloredMsgs: function() {
+            let colorForKind = this.colorForKind;
+            return _.map(this.msgs, function(msg) {
+                msg.color = colorForKind(msg.kind);
+                return msg;
+            })
         },
     },
 
@@ -145,21 +161,30 @@ export default {
                         window.AvApp.msgs,
                         window.AvApp.kinds
                     );
-                    window.AvLegend.msgs = msgs;
+                    window.AvLegend.msgs = window.AvApp.coloredMsgs;
                 });
         },
 
         colorForKind(kind) {
             let index = _.indexOf(this.kinds, kind);
-            let legendColorByIndex = d3.scaleOrdinal(d3.schemeCategory20);
-            return legendColorByIndex(index);
+            if (index < 0) { return null; }
+            return this.colorScale(index);
         },
 
         toggleRightDrawer() {
-            this.rightDrawer = !this.rightDrawer;
-            this.rightDrawerWidth =  this.rightDrawerWidth === '0%'
-                ? this.rightDrawerOpenWidth
-                : '0%';
+            if (this.rightDrawer) {
+                d3.select('#right-drawer').attr('hidden', true);
+                // this.rightDrawerWidth = '0%';
+                this.rightDrawer = false;
+            } else {
+                d3.select('#right-drawer').attr('hidden', null);
+                // this.rightDrawerWidth = this.rightDrawerOpenWidth;
+                this.rightDrawer = true;
+            }
+            // this.rightDrawer = !this.rightDrawer;
+            // this.rightDrawerWidth =  this.rightDrawerWidth === '0%'
+            //     ? this.rightDrawerOpenWidth
+            //     : '0%';
         },
 
         dispatchKeypress(event) {
@@ -168,10 +193,7 @@ export default {
                 this.leftDrawer = !this.leftDrawer;
                 break;
             case 76: // 'L' key, toggles the Legend drawer
-                this.rightDrawer = !this.rightDrawer;
-                this.rightDrawerWidth =  this.rightDrawerWidth === '0%'
-                    ? this.rightDrawerOpenWidth
-                    : '0%';
+                this.toggleRightDrawer();
                 break;
                 // default: alert(event.KeyCode); // Useful to discover other key codes
             }
@@ -181,6 +203,10 @@ export default {
     mounted() {
         window.addEventListener('keydown', this.dispatchKeypress, false);
         window.AvApp.fetchMsgs();
+
+        // This is a hack to get the menu to hide initially:
+        window.AvApp.toggleRightDrawer();
+        window.AvApp.toggleRightDrawer();
     },
 
     components: {
@@ -193,6 +219,9 @@ export default {
 <style>
 body {
     background: #303030;
+    overflow-y: scroll;
+}
+#right-drawer {
     overflow-y: scroll;
 }
 </style>

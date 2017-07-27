@@ -45,7 +45,7 @@
       <!-- "Revision Overview" screen -->
       <v-layout justify-center v-if="currentGraph === 'revisions'">
         <v-flex xs11 sm11>
-          <v-card style="margin-top: 15px; margin-bottom: 15px">
+          <v-card style="margin-top: 15px; margin-bottom: 15px;">
 
             <v-card-title primary-title>
               <div>
@@ -60,9 +60,7 @@
 
             <v-layout align-center justify-center>
               <v-flex xs12>
-                <revisions-graph id="revisions-svg"
-                                 :msgs="msgs"
-                                 :kinds="kinds"></revisions-graph>
+                <revisions-graph id="revisions-svg" :msgs="msgs" :kinds="kinds"></revisions-graph>
               </v-flex>
             </v-layout>
 
@@ -257,9 +255,10 @@ export default {
 </script>
 
 <style>
-  body {
-      background: #303030;
-  }
+body {
+    background: #303030;
+    overflow-y: scroll;
+}
 </style>
 
 <style lang="stylus">

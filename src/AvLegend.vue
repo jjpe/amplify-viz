@@ -1,13 +1,15 @@
 <template>
-  <v-data-table :id="id" :headers="headers" :items="msgs" hide-actions>
+  <v-data-table :id="id"
+                :headers="headers"
+                :items="msgs"
+                :pagination.sync="pagination">
     <template slot="items" scope="props">
-      <!-- <td class="text-xs-left" :class="props.item.color"></td> -->
       <td class="text-xs-left" :style="{background: props.item.color}"></td>
       <td class="text-xs-center">{{ props.item.process }}</td>
       <td class="text-xs-center">{{ props.item.revision }}</td>
       <td class="text-xs-center">{{ props.item.kind }}</td>
-      <td class="text-xs-right">{{ props.item.time_ms.toLocaleString() }}</td>
-      <td class="text-xs-right">{{ props.item.time_perc }}</td>
+      <td class="text-xs-right">{{ parseInt(props.item.sent_at_ns).toLocaleString() }}</td>
+      <td class="text-xs-right">{{ parseInt(props.item.received_at_ns).toLocaleString() }}</td>
     </template>
   </v-data-table>
 </template>
@@ -15,7 +17,7 @@
 <script>
 export default {
     name: 'av-legend',
-    props: ['id', 'msgs'],
+    props: ['id'],
 
     data() {
         // A kludge to ensure the .attr() call in the fixHeaders()
@@ -23,14 +25,22 @@ export default {
         window.AvLegend = this;
 
         return {
+            msgs: [],
+
             headers: [
-                { text: 'Color',     value: 'color',      align: 'center',  sortable: false },
-                { text: 'Process',   value: 'process',    align: 'center',  sortable: true  },
-                { text: 'Revision',  value: 'revision',   align: 'center',  sortable: true  },
-                { text: 'Kind',      value: 'kind',       align: 'center',  sortable: true  },
-                { text: 'Time (ms)', value: 'time_ms',    align: 'right',   sortable: true  },
-                { text: 'Time (%)',  value: 'time_perc',  align: 'right',   sortable: true  }
+                { text: 'Color',            value: 'color',          align: 'center', sortable: false },
+                { text: 'Process',          value: 'process',        align: 'center', sortable: true  },
+                { text: 'Revision',         value: 'revision',       align: 'center', sortable: true  },
+                { text: 'Kind',             value: 'kind',           align: 'center', sortable: true  },
+                { text: 'Sent At (ns)',     value: 'sent_at_ns',     align: 'right',  sortable: true  },
+                { text: 'Received At (ns)', value: 'received_at_ns', align: 'right',  sortable: true  },
             ],
+
+            pagination: {
+                rowsPerPage: 100,
+                sortBy: 'sent_at_ns'
+            },
+
         };
     },
 
@@ -45,7 +55,12 @@ export default {
             // Color the upward/downward sorting arrow icon as well:
             d3.selectAll(`#${this.id} table thead tr th i`)
                 .classed(`${COLOR}--text`, true);
-        }
+        },
+
+        sortByColumn: function(columnName) {
+            let index = this.headers.findIndex((h) => h.value === columnName);
+            this.pagination.sortBy = this.headers[index].value;
+        },
     },
 
     mounted() {
@@ -55,5 +70,7 @@ export default {
 </script>
 
 <style>
-
+.datatable__actions {
+    color: grey;
+}
 </style>

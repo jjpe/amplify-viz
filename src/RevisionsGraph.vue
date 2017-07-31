@@ -81,15 +81,24 @@ export default {
 
             d3.select(`#${this.id} g`).remove(); // Remove old graph, if present
             let svg = d3.select(`#${this.id}`)
-                .attr("height", height + margin.top + margin.bottom)
-                .append("g")
-                  .attr("transform", `translate(${margin.left}, ${margin.top})`);
+                .attr('height', height + margin.top + margin.bottom)
+                .append('g')
+                  .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
             let stack = d3.stack()
                 .keys(window.RevisionsGraph.kinds)
                 // .order(d3.stackOrder)
                 .offset(d3.stackOffsetNone);
             let layers = stack(this.graphData);
+
+            // HACK: This converts the data (which is in ns) into ms:
+            for (let layer of layers) {
+                for (let tuple of layer) {
+                    tuple[0] /= 1000000; // start time
+                    tuple[1] /= 1000000; // end time
+                }
+            }
+
             let lastLayer =  layers.length > 0
                 ? layers[layers.length - 1]
                 : []; // default when there are no layers
@@ -99,8 +108,8 @@ export default {
 
             console.log('[revisionsGraph.renderGraph()] this.msgs',  this.msgs);
             console.log('[revisionsGraph.renderGraph()] this.kinds', this.kinds);
-            console.log("[revisionsGraph.renderGraph()] sorted graphData", this.graphData);
-            console.log("[revisionsGraph.renderGraph()] layers", layers);
+            console.log('[revisionsGraph.renderGraph()] sorted graphData', this.graphData);
+            console.log('[revisionsGraph.renderGraph()] layers', layers);
             console.log('[revisionsGraph.renderGraph()] last layer: ', lastLayer);
 
             let maxX = lastLayer.length > 0
@@ -109,38 +118,39 @@ export default {
             xScale.domain([0, maxX]).nice();
             yScale.domain(this.graphData.map((d) => d.revision));
 
-            let layer = svg.selectAll(".layer")
+            let layer = svg.selectAll('.layer')
                 .data(layers)
-                .enter().append("g")
-                .attr("class", "layer")
-                .attr("color",  (d, i) => colorScale(i).replace('#', ''))
-                .style("fill",  (d, i) => colorScale(i));
+                .enter().append('g')
+                .attr('class', 'layer')
+                .attr('color',  (d, i) => colorScale(i).replace('#', ''))
+                .style('fill',  (d, i) => colorScale(i));
 
-            layer.selectAll("rect") // Stacked bars for each revision
+            layer.selectAll('rect') // Stacked bars for each revision
                 // .data(function(d) { return d; })
                 .data((d) => d)
-                .enter().append("rect")
-                  .attr("y", (d) => yScale(d.data.revision))
-                  .attr("x", (d) => xScale(d[0]))
-                  .attr("height", yScale.bandwidth())
-                  .attr("width", function(d) {
+                .enter().append('rect')
+                  .attr('y', (d) => yScale(d.data.revision))
+                  .attr('x', (d) => xScale(d[0]))
+                  .attr('height', yScale.bandwidth())
+                  .attr('width', function(d) {
                       // Set the width to 0 when there is no `d[1]` value
                       if (Number.isNaN(d[1])) { return 0; }
                       return xScale(d[1]) - xScale(d[0]);
                   });
 
-            svg.append("g")  // X axis
-                .attr("class", "axis axis--x")
+            svg.append('g')  // X axis
+                .attr('class', 'axis axis--x')
                 .call(xAxis);
             svg.select(`.axis--x`)
                 .append('text')
                   .attr('text-anchor', 'middle')
                   .attr('x', `${width/2}px`)
                   .attr('y', '-30px')
-                  .text('Time (ns)');
+            // .text('Time (ns)');
+                .text('Time (ms)');
 
-            svg.append("g")  // Y axis
-                .attr("class", "axis axis--y")
+            svg.append('g')  // Y axis
+                .attr('class', 'axis axis--y')
                 .call(yAxis);
             svg.select(`.axis--y`)
                 .append('text')
@@ -153,10 +163,10 @@ export default {
             // TODO: "cut out" pieces of each bar to visualize `Wire Time`:
             // <rect y="240" x="116" height="178" width="20" style="fill: rgb(66, 66, 66);"></rect>
 
-            svg.append("g")  // Vertical grid lines
-                .attr("class", "grid")
-                .attr("stroke-width", "0.06em")
-                .call(d3.axisTop(xScale).tickSize(-width).tickFormat(""));
+            svg.append('g')  // Vertical grid lines
+                .attr('class', 'grid')
+                .attr('stroke-width', '0.06em')
+                .call(d3.axisTop(xScale).tickSize(-width).tickFormat(''));
             svg.selectAll('g.grid g.tick line')
                 .attr('stroke-dasharray', '10, 10')
                 .attr('y2', height);

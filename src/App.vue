@@ -26,7 +26,7 @@
       <v-spacer></v-spacer>
       <v-toolbar-title class="grey--text" v-text="title"></v-toolbar-title>
       <v-spacer></v-spacer>
-      <v-btn icon>
+      <v-btn icon @click.native="fetchMsgs()">
         <!-- TODO:
              clicking needs to actually sync data from MongoDB,
              or request it from an application server  -->

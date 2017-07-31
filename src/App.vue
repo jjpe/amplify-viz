@@ -183,14 +183,18 @@ export default {
         },
 
         dispatchKeypress(event) {
-            switch (event.keyCode) {
-            case 71: // 'G' key, toggles the Graphs drawer
+            switch (event.key) {
+            case 'g': // Toggles the Graph drawer
                 this.leftDrawer = !this.leftDrawer;
                 break;
-            case 76: // 'L' key, toggles the Legend drawer
+            case 'l': // Toggles the Legend drawer
                 this.toggleRightDrawer();
                 break;
-                // default: alert(event.KeyCode); // Useful to discover other key codes
+            case 'f': // Causes a graph data fetch
+                this.fetchMsgs();
+                break;
+            // default:
+            //     console.log('key event:', event); // Useful to discover other key codes
             }
         },
     },

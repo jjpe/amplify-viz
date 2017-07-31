@@ -4,12 +4,15 @@
                 :items="msgs"
                 :pagination.sync="pagination">
     <template slot="items" scope="props">
-      <td class="text-xs-left" :style="{background: props.item.color}"></td>
-      <td class="text-xs-center">{{ props.item.process }}</td>
-      <td class="text-xs-center">{{ props.item.revision }}</td>
-      <td class="text-xs-center">{{ props.item.kind }}</td>
-      <td class="text-xs-right">{{ parseInt(props.item.sent_at_ns).toLocaleString() }}</td>
-      <td class="text-xs-right">{{ parseInt(props.item.received_at_ns).toLocaleString() }}</td>
+      <td @mouseenter="mouseEnterColorCell"
+          @mouseleave="mouseLeaveColorCell"
+          class="unselectable text-xs-left"
+          :style="{background: props.item.color}"></td>
+      <td class="unselectable text-xs-center">{{ props.item.process }}</td>
+      <td class="unselectable text-xs-center">{{ props.item.revision }}</td>
+      <td class="unselectable text-xs-center">{{ props.item.kind }}</td>
+      <td class="unselectable text-xs-right">{{ parseInt(props.item.sent_at_ns).toLocaleString() }}</td>
+      <td class="unselectable text-xs-right">{{ parseInt(props.item.received_at_ns).toLocaleString() }}</td>
     </template>
   </v-data-table>
 </template>
@@ -61,10 +64,105 @@ export default {
             let index = this.headers.findIndex((h) => h.value === columnName);
             this.pagination.sortBy = this.headers[index].value;
         },
+
+        mouseEnterColorCell: function(event) {
+            let element = event.target;
+            let bgColor = d3.select(element).style('background');
+            let bgHexColor = this.colorToHex(bgColor);
+            this.layersNotColoredAs(bgHexColor).style('opacity', 0.1);
+            d3.select('.navigation-drawer--right').style('opacity', 0.2);
+        },
+
+        mouseLeaveColorCell: function(event) {
+            let element = event.target;
+            let bgColor = d3.select(element).style('background');
+            let bgHexColor = this.colorToHex(bgColor);
+            this.layersNotColoredAs(bgHexColor).style('opacity', 1);
+            d3.select('.navigation-drawer--right').style('opacity', 1);
+        },
+
+        layerColoredAs(color) {
+            let colorHex = window.AvLegend.colorToHex(color);
+            return d3.selectAll('#revisions-svg g g.layer')
+                .filter(function(d, i, layers) {
+                    let element = layers[i];
+                    let style = window.getComputedStyle(element);
+                    let fill = style.getPropertyValue('fill');
+                    let fillHex = window.AvLegend.colorToHex(fill);
+                    return fillHex.trim() === colorHex.trim();
+                });
+        },
+
+        layersNotColoredAs(color) {
+            let colorHex = window.AvLegend.colorToHex(color);
+            return d3.selectAll('#revisions-svg g g.layer')
+                .filter(function(d, i, layers) {
+                    let element = layers[i];
+                    let style = window.getComputedStyle(element);
+                    let fill = style.getPropertyValue('fill');
+                    let fillHex = window.AvLegend.colorToHex(fill);
+                    return fillHex.trim() !== colorHex.trim();
+                });
+        },
+
+        colorToRgb(color) {
+            if (color.startsWith('rgb(')) {
+                return color.trim();
+            } else if (color.startsWith('#')) {
+                return this.hexStringToRgbString(color).trim();
+            } else {
+                throw `Unknown color: ${color}`
+            }
+        },
+
+        colorToHex(color) {
+            if (color.startsWith('rgb(')) {
+                return this.rgbStringToHex(color).trim();
+            } else if (color.startsWith('#')) {
+                return color.trim();
+            } else {
+                throw `Unknown color: ${color}`
+            }
+        },
+
+        componentToHex(c) {
+            let hex = c.toString(16);
+            return hex.length == 1 ? '0' + hex : hex;
+        },
+
+        rgbToHex(r, g, b) {
+            let red   = this.componentToHex(r);
+            let green = this.componentToHex(g);
+            let blue  = this.componentToHex(b);
+            return `#${red}${green}${blue}`;
+        },
+
+        hexStringToRgb(hex) {
+            let result = /#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        },
+
+        rgbStringToHex(rgb) {
+            let result = /rgb\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)\)/g.exec(rgb);
+            let r = parseInt(result[1]);
+            let g = parseInt(result[2]);
+            let b = parseInt(result[3]);
+            return this.rgbToHex(r, g, b);
+        },
+
+        hexStringToRgbString(hex) {
+            let o = this.hexStringToRgb(hex);
+            return `rgb(${o.r},${o.g},${o.b})`;
+        },
+
     },
 
     mounted() {
-        this.fixHeaders()
+        this.fixHeaders();
     },
 };
 </script>
@@ -75,5 +173,13 @@ export default {
 }
 table.table tbody tr:hover {
   background: #312f2f !important;
+}
+.unselectable {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 </style>

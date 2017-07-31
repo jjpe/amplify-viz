@@ -76,10 +76,9 @@
     </main>
     <v-navigation-drawer id="right-drawer"
                          persistent clipped right
+                         :style="{ width: rightDrawerWidth }"
                          v-model="rightDrawer"
-                         style="width: 60%;"
-                         >
-      <!-- :style="{ width: rightDrawerWidth }" -->
+                         hide-overlay>
       <v-toolbar class="grey--text indigo" dark>
         <v-toolbar-title>Legend</v-toolbar-title>
       </v-toolbar>
@@ -114,9 +113,8 @@ export default {
             ],
 
             rightDrawer: false,
-            // rightDrawerWidth: '0%',
-            rightDrawerWidth: '700px',
-            rightDrawerOpenWidth: '700px',
+            rightDrawerWidth: '0%',
+            rightDrawerOpenWidth: '70%',
 
             colorScale: d3.scaleOrdinal(d3.schemeCategory20),
         };
@@ -144,9 +142,9 @@ export default {
     methods: {
         fetchMsgs() {
             console.log('[fetchMsgs] method called');
-            d3.request("/msgs/")
-                .header("X-Requested-With", "XMLHttpRequest")
-                .header("Content-Type", "application/json")
+            d3.request('/msgs/')
+                .header('X-Requested-With', 'XMLHttpRequest')
+                .header('Content-Type', 'application/json')
                 .get(function(resp) {
                     let msgs = JSON.parse(resp.responseText);
                     let sortedMsgs = _.orderBy(
@@ -172,19 +170,16 @@ export default {
         },
 
         toggleRightDrawer() {
-            if (this.rightDrawer) {
-                d3.select('#right-drawer').attr('hidden', true);
-                // this.rightDrawerWidth = '0%';
-                this.rightDrawer = false;
-            } else {
-                d3.select('#right-drawer').attr('hidden', null);
-                // this.rightDrawerWidth = this.rightDrawerOpenWidth;
-                this.rightDrawer = true;
-            }
-            // this.rightDrawer = !this.rightDrawer;
-            // this.rightDrawerWidth =  this.rightDrawerWidth === '0%'
-            //     ? this.rightDrawerOpenWidth
-            //     : '0%';
+            let oldWidth = d3.select('#right-drawer').style('width');
+            let newWidth =  oldWidth === '0%'
+                ? '70%' //this.rightDrawerOpenWidth
+                : '0%';
+            d3.select('#right-drawer').style('width', newWidth);
+            // if (width !== '0%') {
+            //     d3.select('#right-drawer').style('width', '0%');
+            // } else {
+            //     d3.select('#right-drawer').style('width', '70%');
+            // }
         },
 
         dispatchKeypress(event) {
@@ -197,7 +192,7 @@ export default {
                 break;
                 // default: alert(event.KeyCode); // Useful to discover other key codes
             }
-        }
+        },
     },
 
     mounted() {

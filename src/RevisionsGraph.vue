@@ -113,6 +113,7 @@ export default {
                 .data(layers)
                 .enter().append("g")
                 .attr("class", "layer")
+                .attr("color",  (d, i) => colorScale(i).replace('#', ''))
                 .style("fill",  (d, i) => colorScale(i));
 
             layer.selectAll("rect") // Stacked bars for each revision

@@ -11,13 +11,18 @@
       <td class="unselectable text-xs-center">{{ props.item.process }}</td>
       <td class="unselectable text-xs-center">{{ props.item.revision }}</td>
       <td class="unselectable text-xs-center">{{ props.item.kind }}</td>
-      <td class="unselectable text-xs-right">{{ parseInt(props.item.sent_at_ns).toLocaleString() }}</td>
-      <td class="unselectable text-xs-right">{{ parseInt(props.item.received_at_ns).toLocaleString() }}</td>
+      <td class="unselectable text-xs-right">{{ formattedDate(props.item.sent_at_ns) }}</td>
+      <td class="unselectable text-xs-right">{{ formattedDate(props.item.received_at_ns) }}</td>
+
+      <!--                 See  `data.headers`                 -->
+      <!-- <td class="unselectable text-xs-right">{{ parseInt(props.item.action_time_ns).toLocaleString() }}</td> -->
+      <!-- <td class="unselectable text-xs-right">{{ parseInt(props.item.wire_time_ns).toLocaleString() }}</td> -->
     </template>
   </v-data-table>
 </template>
 
 <script>
+import moment from 'moment';
 export default {
     name: 'av-legend',
     props: ['id'],
@@ -31,12 +36,26 @@ export default {
             msgs: [],
 
             headers: [
-                { text: 'Color',            value: 'color',          align: 'center', sortable: false },
-                { text: 'Process',          value: 'process',        align: 'center', sortable: true  },
-                { text: 'Revision',         value: 'revision',       align: 'center', sortable: true  },
-                { text: 'Kind',             value: 'kind',           align: 'center', sortable: true  },
-                { text: 'Sent At (ns)',     value: 'sent_at_ns',     align: 'right',  sortable: true  },
-                { text: 'Received At (ns)', value: 'received_at_ns', align: 'right',  sortable: true  },
+                { text: 'Color',       value: 'color',          align: 'center', sortable: false },
+                { text: 'Process',     value: 'process',        align: 'center', sortable: true  },
+                { text: 'Revision',    value: 'revision',       align: 'center', sortable: true  },
+                { text: 'Kind',        value: 'kind',           align: 'center', sortable: true  },
+                { text: 'Sent At',     value: 'sent_at_ns',     align: 'right',  sortable: true  },
+                { text: 'Received At', value: 'received_at_ns', align: 'right',  sortable: true  },
+
+                /// Action time `T_action` of an action in a Revision is the
+                /// time delta between 2 moments:
+                ///  1. The moment that the `originating msg` was sent
+                ///  2. The moment that the corresponding `action msg` was
+                ///     received by the Collector
+                ///
+                // { text: 'T action (ns)',    value: 'action_time_ns', align: 'right',  sortable: true  },
+
+                /// Wire time `T~~` of a `msg` is the time delta between:
+                ///  1. The moment the msg was sent
+                ///  2. The moment that same msg was received by the Collector
+                ///
+                // { text: 'T~~ (ns)',      value: 'wire_time_ns',   align: 'right',  sortable: true  },
             ],
 
             pagination: {
@@ -48,6 +67,11 @@ export default {
     },
 
     methods: {
+        formattedDate(nanoseconds) {
+            let millis = parseInt(nanoseconds) / 1000000;
+            return moment(millis).format('DD/MM/YYYY  HH:mm:ss.SSS');
+        },
+
         fixHeaders: function() {
             const COLOR = 'grey';
             d3.selectAll(`#${this.id} table thead tr th`)

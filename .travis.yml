@@ -1,0 +1,22 @@
+os:
+- linux
+branches:
+  except:
+  - master
+before_install:
+- echo "TravisCI build dir @ $TRAVIS_BUILD_DIR"
+- echo "Git tag @ $TRAVIS_TAG"
+script:
+- ls -alh
+- ls -alh ${TRAVIS_BUILD_DIR}
+- cd ${TRAVIS_BUILD_DIR}/
+- zip -r ./amplify-viz-${TRAVIS_TAG}.zip ./LICENSE ./index.html ./README.md ./dist/ ./*.json ./*.js ./public/
+deploy:
+  provider: releases
+  api_key:
+    secure: jMpz6VcS0NlzcT4dCe0tNGW55ALkTo5Li4dXtiX6vvKdAKckZtZ+hfCqNZgPBeBTxNaBU72dPBEK1I/rxTifiZQ299l/veA3JoH7ISA5b076ucAi1cs2gComea878VjJ4/nMtCvn0LhMQLQa0741WPGm97D/Bpku2g/tJL8LyJ0kR8ahGb9CqKQvFr55CnwEshpK6mzg9ABvm2osb8aXF2GAiUW/FNKZ/6KtJRDs1KZ7MduZUSMoRuUzn3Hvdr2qfj8S6bedYxKdpUTcd1Hjbd2b++/Fc1RgHiCL5OwZhGyw8LPnqxk/CftyrGWRLPXtR+MCQIo9NnpXg0FQMvcHJAXTzijYa9wd6J721pHUCGCfI2EMKCRchozhLsaXFMl1/fTp71bGZvuT/0S5KcNWKNJL/QwujojLj0w5TlCMZLQzQVt8oyctxmpIA8Mq2wU1jHXPC10rvH4B+JHwG1dXxk1VZd8qWohfU2RPlee/yd5rhN3GirLA6U1f2S3NCVLLSAbPaKe4qdpgN2BYt1uK8rNxsQFydqWre1bTfbJuJqGFu8pMXirhfxoMz73CFqVXb1CDH9jEWbSPN8xW+QWkv+4tnxvTFPtC107HMns13MdW/TeTVlknVG48/gTvlp+/0r2AnCYO1Do+lI4Jb83pIJ1xH4eNSFSBENMdpUTv5k4=
+  file:
+  - ./amplify-viz-${TRAVIS_TAG}.zip
+  on:
+    repo: jjpe/amplify-viz
+    tags: true

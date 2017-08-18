@@ -1,7 +1,7 @@
 {
     "name": "amplify-viz",
     "description": "A performance data visualization tool for Amplify",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "author": "Joey Ezechiëls <joey.ezechiels@gmail.com>",
     "private": true,
     "scripts": {

@@ -3,9 +3,12 @@ os:
 branches:
   except:
   - master
+sudo: required
 before_install:
 - echo "TravisCI build dir @ $TRAVIS_BUILD_DIR"
 - echo "Git tag @ $TRAVIS_TAG"
+- sudo apt-get update -qq
+- sudo apt-get install -qq nodejs
 script:
 - ls -alh
 - ls -alh ${TRAVIS_BUILD_DIR}

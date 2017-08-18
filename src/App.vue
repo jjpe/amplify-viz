@@ -112,7 +112,7 @@ export default {
                 { icon: 'filter_none', title: 'Revisions' }
             ],
 
-            rightDrawer: false,
+            rightDrawer: true,
             rightDrawerWidth: '0%',
             rightDrawerOpenWidth: '70%',
 
@@ -130,12 +130,41 @@ export default {
                 .uniq()
                 .value()
         },
-        coloredMsgs: function() {
+        sourceMsgs: function() {
+            /// Return the "source" msg from each revision.
+            return _.filter(this.msgs,  (msg) => msg.kind === 'source');
+        },
+        fattenedMsgs: function() {
             let colorForKind = this.colorForKind;
-            return _.map(this.msgs, function(msg) {
+            let sourceMsgs = this.sourceMsgs;
+            // let prevMsg = { sent_at_ns: 0 };
+            let fattenedMsgs = _.map(this.msgs, function(msg) {
                 msg.color = colorForKind(msg.kind);
+                msg.wire_time_ns = parseInt(msg.received_at_ns) - parseInt(msg.sent_at_ns);
+                // let srcMsg = _.filter(sourceMsgs, (sm) => sm.revision === msg.revision)[0];
+                // console.log(`[fattenedMsgs] msg.received_at_ns: `, msg.received_at_ns);
+                // console.log(`[fattenedMsgs] parseInt(msg.received_at_ns): `, parseInt(msg.received_at_ns));
+                // console.log(`[fattenedMsgs] srcMsg.sent_at_ns: `, srcMsg.sent_at_ns);
+                // console.log(`[fattenedMsgs] parseInt(srcMsg.sent_at_ns): `, parseInt(srcMsg.sent_at_ns));
+                // msg.action_time_ns = parseInt(msg.received_at_ns) - parseInt(srcMsg.sent_at_ns);
                 return msg;
-            })
+            });
+
+
+            for (let idx in this.msgsByRevision) {
+                let revisionMsgs = _.chain(this.msgsByRevision[idx])
+                    .sortBy(['sent_at_ns'], ['asc'])
+                    .value();
+                let prevMsg = revisionMsgs[0];
+                for (let midx in revisionMsgs) {
+                    let msg = revisionMsgs[midx];
+                    msg.action_time_ns = parseInt(msg.received_at_ns) - parseInt(prevMsg.received_at_ns);
+                    prevMsg = msg;
+                }
+            }
+
+            console.log(`[fattenedMsgs] fattenedMsgs: `, fattenedMsgs);
+            return fattenedMsgs;
         },
     },
 
@@ -159,7 +188,7 @@ export default {
                         window.AvApp.msgs,
                         window.AvApp.kinds
                     );
-                    window.AvLegend.msgs = window.AvApp.coloredMsgs;
+                    window.AvLegend.msgs = window.AvApp.fattenedMsgs;
                 });
         },
 
@@ -174,7 +203,8 @@ export default {
             let newWidth =  oldWidth === '0%'
                 ? '70%' //this.rightDrawerOpenWidth
                 : '0%';
-            d3.select('#right-drawer').style('width', newWidth);
+            // d3.select('#right-drawer').style('width', newWidth);
+            this.rightDrawerWidth = newWidth;
             // if (width !== '0%') {
             //     d3.select('#right-drawer').style('width', '0%');
             // } else {

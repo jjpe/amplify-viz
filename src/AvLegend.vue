@@ -12,9 +12,9 @@
       <td class="unselectable text-xs-center">{{ props.item.process  }}</td>
       <td class="unselectable text-xs-center">{{ props.item.kind     }}</td>
       <td class="unselectable text-xs-right">{{ formattedDuration(props.item.action_time_ns) }}</td>
+      <td class="unselectable text-xs-right">{{ formattedDuration(props.item.wire_time_ns)   }}</td>
       <td class="unselectable text-xs-right">{{ formattedDate(props.item.sent_at_ns)         }}</td>
       <td class="unselectable text-xs-right">{{ formattedDate(props.item.received_at_ns)     }}</td>
-      <td class="unselectable text-xs-right">{{ formattedDuration(props.item.wire_time_ns)   }}</td>
     </template>
   </v-data-table>
 </template>
@@ -35,8 +35,8 @@ export default {
 
             headers: [
                 { text: 'Color',          value: 'color',          align: 'center', sortable: false },
-                { text: 'Process',        value: 'process',        align: 'center', sortable: true  },
                 { text: 'Revision',       value: 'revision',       align: 'center', sortable: true  },
+                { text: 'Process',        value: 'process',        align: 'center', sortable: true  },
                 { text: 'Action',         value: 'kind',           align: 'center', sortable: true  },
                 /// Action time `T_action` of an action in a Revision is the
                 /// time delta between 2 moments:

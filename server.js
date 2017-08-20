@@ -75,7 +75,26 @@ server.use(function(req, res, next) {
 
 // Return to the client a JSON object containing *ALL* msgs
 server.get('/msgs', function(req, res) {
-    Msg.find().exec(function(err, msgs) {
+    let excluded_fields = {
+        // The contents of these fields can be pretty huge.  In addition, the
+        // client does not use them at all, so let's just not fetch them.
+        contents: 0,
+        ast: 0
+    };
+    Msg.find({}, excluded_fields).exec(function(err, msgs) {
+        if (msgs === null) {
+            log(`${req.url} => Found no msgs:  msgs === null`);
+            return;
+        }
+        if (msgs === undefined) {
+            log(`${req.url} => Found no msgs:  msgs is undefined`);
+            return;
+        }
+        if (!msgs.length) {
+            log(`${req.url} => Found no msgs:  msgs has no length`);
+            return;
+        }
+
         log(`${req.url} => Found ${msgs.length} msgs`);
         res.json(msgs);
     });
